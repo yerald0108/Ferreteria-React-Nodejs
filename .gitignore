@@ -1,0 +1,153 @@
+# ============================================
+# 🛠️ FERRETERÍA ONLINE - .gitignore
+# ============================================
+
+# --------------------------
+# 🚨 ARCHIVOS SENSIBLES
+# --------------------------
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+.env.backup
+.env.sample
+.secret
+*.key
+*.pem
+*.crt
+
+# --------------------------
+# 📦 DEPENDENCIAS NODE
+# --------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# --------------------------
+# 🗃️ BASE DE DATOS
+# --------------------------
+*.db
+*.sqlite
+*.sqlite3
+db.sqlite3
+database/
+dump.sql
+backups/
+
+# --------------------------
+# 🏗️ BUILD / COMPILACIÓN
+# --------------------------
+dist/
+build/
+.out/
+.next/
+.nuxt/
+.cache/
+.vuepress/dist
+*.exe
+*.dll
+*.so
+*.dylib
+
+# --------------------------
+# 🔧 IDE / EDITORES
+# --------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+.project
+.settings/
+*.sublime-*
+
+# --------------------------
+# 🧪 TEST / COVERAGE
+# --------------------------
+coverage/
+.nyc_output
+*.lcov
+.jest/
+*.log
+test-results/
+reports/
+
+# --------------------------
+# 📝 LOGS
+# --------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --------------------------
+# 🖼️ IMÁGENES / MEDIA
+# --------------------------
+uploads/
+temp/
+tmp/
+*.tmp
+*.temp
+
+# --------------------------
+# 🐳 DOCKER
+# --------------------------
+docker-compose.override.yml
+
+# --------------------------
+# 🔐 SISTEMA OPERATIVO
+# --------------------------
+# Windows
+[Dd]esktop.ini
+Thumbs.db
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+._*
+
+# Linux
+*~
+
+# --------------------------
+# 🎯 BACKEND ESPECÍFICO
+# --------------------------
+backend/.env
+backend/node_modules/
+backend/npm-debug.log
+backend/coverage/
+backend/dist/
+backend/.nyc_output
+
+# --------------------------
+# ⚛️ FRONTEND ESPECÍFICO (futuro)
+# --------------------------
+frontend/.env
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.cache/
+frontend/.parcel-cache/
+frontend/.vite/
+frontend/dist/
+frontend/build/
+frontend/.nuxt/
+frontend/.svelte-kit/
