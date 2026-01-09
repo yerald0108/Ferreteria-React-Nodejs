@@ -5,23 +5,19 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { errorHandler } = require('./middleware/errorHandler');
 
-// Importar rutas
-const authRoutes = require('./routes/authRoutes');
-const productRoutes = require('./routes/productRoutes');
-
 const app = express();
 
 // Middlewares básicos
 app.use(helmet()); // Seguridad HTTP
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
 }));
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // límite por IP
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW) * 60 * 1000 || 15 * 60 * 1000,
+  max: parseInt(process.env.RATE_LIMIT_MAX) || 100,
   message: 'Demasiadas solicitudes desde esta IP'
 });
 app.use('/api/', limiter);
@@ -30,27 +26,32 @@ app.use('/api/', limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rutas
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-
-// Ruta de prueba
+// Ruta de prueba (health check)
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     message: 'Backend de Ferretería funcionando',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV
   });
 });
 
-// Manejo de errores
-app.use(errorHandler);
+// Importar y usar rutas
+const authRoutes = require('./routes/authRoutes');
+const productRoutes = require('./routes/productRoutes');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
 
 // Ruta 404
 app.use('*', (req, res) => {
   res.status(404).json({
-    error: 'Ruta no encontrada'
+    error: 'Ruta no encontrada',
+    path: req.originalUrl
   });
 });
+
+// Manejo de errores (debe ir al final)
+app.use(errorHandler);
 
 module.exports = app;
