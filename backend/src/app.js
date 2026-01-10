@@ -41,6 +41,7 @@ const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const locationsRoutes = require('./routes/locationsRoutes');
 
+// Registrar rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/locations', locationsRoutes);

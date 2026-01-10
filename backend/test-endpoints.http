@@ -1,0 +1,267 @@
+### Variables
+@baseUrl = http://localhost:5000/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNzY4MDUwNDI0LCJleHAiOjE3Njg2NTUyMjR9.uw6Z3h-affUN2f8NXfYHJkHEhhQnoAExur1FRtQWAXc
+
+### ============================================
+### 🏥 HEALTH CHECK
+### ============================================
+
+GET {{baseUrl}}/health
+
+### ============================================
+### 👤 AUTENTICACIÓN
+### ============================================
+
+### Registrar Usuario
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "juan@ejemplo.com",
+  "password": "password123",
+  "first_name": "Juan",
+  "last_name": "Pérez",
+  "phone": "1234567890"
+}
+
+### Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "juan@ejemplo.com",
+  "password": "password123"
+}
+
+### Obtener perfil actual (requiere token)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+### Actualizar perfil (requiere token)
+PUT {{baseUrl}}/auth/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "first_name": "Juan Carlos",
+  "last_name": "Pérez García",
+  "phone": "0987654321"
+}
+
+### Solicitar recuperación de contraseña
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "juan@ejemplo.com"
+}
+
+### Resetear contraseña (usa el token que se generó)
+POST {{baseUrl}}/auth/reset-password/TOKEN_AQUI
+Content-Type: application/json
+
+{
+  "password": "nuevaPassword123"
+}
+
+### ============================================
+### 🛍️ PRODUCTOS
+### ============================================
+
+### Listar todos los productos (sin filtros)
+GET {{baseUrl}}/products
+
+### Listar productos con paginación
+GET {{baseUrl}}/products?page=1&limit=5
+
+### Buscar productos
+GET {{baseUrl}}/products?search=martillo
+
+### Filtrar por categoría
+GET {{baseUrl}}/products?category=Herramientas Manuales
+
+### Filtrar por rango de precio
+GET {{baseUrl}}/products?minPrice=10&maxPrice=50
+
+### Solo productos en stock
+GET {{baseUrl}}/products?inStock=true
+
+### Productos destacados
+GET {{baseUrl}}/products?featured=true
+
+### Ordenar por precio ascendente
+GET {{baseUrl}}/products?sortBy=price&order=ASC
+
+### Búsqueda avanzada combinada
+GET {{baseUrl}}/products?search=taladro&category=Herramientas Eléctricas&minPrice=50&inStock=true&sortBy=price&order=ASC
+
+### Obtener producto por ID
+GET {{baseUrl}}/products/1
+
+### Obtener producto por slug
+GET {{baseUrl}}/products/martillo-de-carpintero-16oz
+
+### Obtener productos destacados
+GET {{baseUrl}}/products/featured?limit=4
+
+### Obtener productos más vendidos
+GET {{baseUrl}}/products/best-sellers?limit=5
+
+### Obtener productos relacionados
+GET {{baseUrl}}/products/1/related?limit=4
+
+### ============================================
+### 🛍️ PRODUCTOS - ADMIN (requiere token)
+### ============================================
+
+### Crear producto
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Sierra Circular 1400W",
+  "description": "Sierra circular profesional de 1400W con disco de 7.25 pulgadas. Ideal para cortes precisos en madera y materiales compuestos.",
+  "short_description": "Sierra circular 1400W profesional",
+  "price": 189.99,
+  "compare_price": 229.99,
+  "cost": 120.00,
+  "sku": "SIER-001",
+  "stock": 15,
+  "min_stock": 3,
+  "category": "Herramientas Eléctricas",
+  "brand": "Makita",
+  "unit": "unidad",
+  "weight": 3.5,
+  "tags": ["sierra", "circular", "makita", "1400w"],
+  "is_featured": true,
+  "features": {
+    "potencia": "1400W",
+    "disco": "7.25 pulgadas",
+    "profundidad_corte": "65mm",
+    "rpm": "5000"
+  }
+}
+
+### Actualizar producto
+PUT {{baseUrl}}/products/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "price": 14.99,
+  "stock": 55,
+  "is_featured": true
+}
+
+### Actualizar stock - Establecer valor exacto
+PATCH {{baseUrl}}/products/1/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "stock": 100,
+  "operation": "set"
+}
+
+### Actualizar stock - Agregar unidades
+PATCH {{baseUrl}}/products/1/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "stock": 20,
+  "operation": "add"
+}
+
+### Actualizar stock - Restar unidades
+PATCH {{baseUrl}}/products/1/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "stock": 5,
+  "operation": "subtract"
+}
+
+### Obtener productos con bajo stock
+GET {{baseUrl}}/products/admin/low-stock
+Authorization: Bearer {{token}}
+
+### Eliminar producto (soft delete)
+DELETE {{baseUrl}}/products/1
+Authorization: Bearer {{token}}
+
+### ============================================
+### 📍 UBICACIONES (Provincias y Municipios)
+### ============================================
+
+### Obtener todas las provincias
+GET {{baseUrl}}/locations/provinces
+
+### Obtener municipios de La Habana
+GET {{baseUrl}}/locations/municipalities/La Habana
+
+### Obtener municipios de Santiago de Cuba
+GET {{baseUrl}}/locations/municipalities/Santiago de Cuba
+
+### Obtener todas las divisiones (completo)
+GET {{baseUrl}}/locations/all
+
+### Obtener divisiones en formato simple
+GET {{baseUrl}}/locations/divisions-simple
+
+### Validar ubicación correcta
+POST {{baseUrl}}/locations/validate
+Content-Type: application/json
+
+{
+  "province": "La Habana",
+  "city": "Plaza de la Revolución"
+}
+
+### Validar ubicación incorrecta
+POST {{baseUrl}}/locations/validate
+Content-Type: application/json
+
+{
+  "province": "La Habana",
+  "city": "Holguín"
+}
+
+### Buscar municipios con "santa"
+GET {{baseUrl}}/locations/search?q=santa
+
+### Buscar municipios con "san"
+GET {{baseUrl}}/locations/search?q=san
+
+### ============================================
+### 🧪 PRUEBAS DE ERROR
+### ============================================
+
+### Registro con email duplicado (debería fallar)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "juan@ejemplo.com",
+  "password": "password123",
+  "first_name": "Pedro",
+  "last_name": "González",
+  "phone": "1111111111"
+}
+
+### Login con contraseña incorrecta (debería fallar)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "juan@ejemplo.com",
+  "password": "wrongpassword"
+}
+
+### Acceder sin token (debería fallar)
+GET {{baseUrl}}/auth/me
+
+### Ruta que no existe (404)
+GET {{baseUrl}}/ruta-inexistente
