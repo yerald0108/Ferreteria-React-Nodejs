@@ -1,6 +1,7 @@
 // backend/src/models/Product.js
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
+const Category = require('./Category');
 
 const Product = sequelize.define('Product', {
   id: {
@@ -197,7 +198,22 @@ const Product = sequelize.define('Product', {
   ]
 });
 
-// Métodos de instancia
+// ============================================
+// RELACIONES (definir DESPUÉS del modelo)
+// ============================================
+Product.belongsTo(Category, { 
+  foreignKey: 'category_id',
+  as: 'categoryInfo'
+});
+
+Category.hasMany(Product, { 
+  foreignKey: 'category_id',
+  as: 'products'
+});
+
+// ============================================
+// MÉTODOS DE INSTANCIA
+// ============================================
 Product.prototype.isInStock = function() {
   return this.stock > 0;
 };
@@ -215,7 +231,9 @@ Product.prototype.getDiscountPercentage = function() {
   return Math.round(((this.compare_price - this.price) / this.compare_price) * 100);
 };
 
-// Hooks
+// ============================================
+// HOOKS
+// ============================================
 Product.beforeCreate(async (product) => {
   // Generar SKU automático si no existe
   if (!product.sku) {
@@ -226,12 +244,59 @@ Product.beforeCreate(async (product) => {
   
   // Generar slug si no existe
   if (!product.slug) {
-    product.slug = product.name
+    let baseSlug = product.name
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
+    
+    // Verificar que el slug sea único
+    let slug = baseSlug;
+    let counter = 1;
+    let existingProduct = await Product.findOne({ where: { slug } });
+    
+    while (existingProduct) {
+      slug = `${baseSlug}-${counter}`;
+      existingProduct = await Product.findOne({ where: { slug } });
+      counter++;
+    }
+    
+    product.slug = slug;
+  }
+});
+
+Product.beforeUpdate(async (product) => {
+  // Si se cambia el nombre y no se proporciona un nuevo slug, regenerarlo
+  if (product.changed('name') && !product.changed('slug')) {
+    let baseSlug = product.name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    
+    let slug = baseSlug;
+    let counter = 1;
+    let existingProduct = await Product.findOne({ 
+      where: { 
+        slug,
+        id: { [require('sequelize').Op.ne]: product.id }
+      } 
+    });
+    
+    while (existingProduct) {
+      slug = `${baseSlug}-${counter}`;
+      existingProduct = await Product.findOne({ 
+        where: { 
+          slug,
+          id: { [require('sequelize').Op.ne]: product.id }
+        } 
+      });
+      counter++;
+    }
+    
+    product.slug = slug;
   }
 });
 

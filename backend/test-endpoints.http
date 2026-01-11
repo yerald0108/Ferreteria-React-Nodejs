@@ -1,6 +1,6 @@
 ### Variables
 @baseUrl = http://localhost:5000/api
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNzY4MDUwNDI0LCJleHAiOjE3Njg2NTUyMjR9.uw6Z3h-affUN2f8NXfYHJkHEhhQnoAExur1FRtQWAXc
+@token = TU_TOKEN_AQUI
 
 ### ============================================
 ### 🏥 HEALTH CHECK
@@ -29,46 +29,74 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "juan@ejemplo.com",
-  "password": "password123"
+  "email": "admin@ferreteria.com",
+  "password": "admin123"
 }
 
 ### Obtener perfil actual (requiere token)
 GET {{baseUrl}}/auth/me
 Authorization: Bearer {{token}}
 
-### Actualizar perfil (requiere token)
-PUT {{baseUrl}}/auth/profile
+### ============================================
+### 📂 CATEGORÍAS
+### ============================================
+
+### Obtener todas las categorías
+GET {{baseUrl}}/categories
+
+### Obtener categorías con subcategorías
+GET {{baseUrl}}/categories?includeSubcategories=true
+
+### Obtener árbol de categorías (jerárquico)
+GET {{baseUrl}}/categories/tree
+
+### Obtener categoría por ID
+GET {{baseUrl}}/categories/1
+
+### Obtener categoría por slug
+GET {{baseUrl}}/categories/herramientas-manuales
+
+### Obtener productos de una categoría
+GET {{baseUrl}}/categories/1/products
+
+### Obtener productos de categoría por slug con paginación
+GET {{baseUrl}}/categories/herramientas-manuales/products?page=1&limit=10
+
+### Crear nueva categoría (requiere admin token)
+POST {{baseUrl}}/categories
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "first_name": "Juan Carlos",
-  "last_name": "Pérez García",
-  "phone": "0987654321"
+  "name": "Jardinería",
+  "description": "Herramientas y accesorios para jardinería",
+  "icon": "flower",
+  "order": 7
 }
 
-### Solicitar recuperación de contraseña
-POST {{baseUrl}}/auth/forgot-password
+### Actualizar categoría (requiere admin token)
+PUT {{baseUrl}}/categories/1
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "email": "juan@ejemplo.com"
+  "description": "Herramientas manuales profesionales y de uso doméstico",
+  "order": 1
 }
 
-### Resetear contraseña (usa el token que se generó)
-POST {{baseUrl}}/auth/reset-password/TOKEN_AQUI
-Content-Type: application/json
+### Obtener estadísticas de categorías (requiere admin token)
+GET {{baseUrl}}/categories/admin/stats
+Authorization: Bearer {{token}}
 
-{
-  "password": "nuevaPassword123"
-}
+### Eliminar categoría (requiere admin token)
+DELETE {{baseUrl}}/categories/7
+Authorization: Bearer {{token}}
 
 ### ============================================
 ### 🛍️ PRODUCTOS
 ### ============================================
 
-### Listar todos los productos (sin filtros)
+### Listar todos los productos
 GET {{baseUrl}}/products
 
 ### Listar productos con paginación
@@ -87,13 +115,10 @@ GET {{baseUrl}}/products?minPrice=10&maxPrice=50
 GET {{baseUrl}}/products?inStock=true
 
 ### Productos destacados
-GET {{baseUrl}}/products?featured=true
+GET {{baseUrl}}/products/featured?limit=4
 
-### Ordenar por precio ascendente
-GET {{baseUrl}}/products?sortBy=price&order=ASC
-
-### Búsqueda avanzada combinada
-GET {{baseUrl}}/products?search=taladro&category=Herramientas Eléctricas&minPrice=50&inStock=true&sortBy=price&order=ASC
+### Productos más vendidos
+GET {{baseUrl}}/products/best-sellers?limit=5
 
 ### Obtener producto por ID
 GET {{baseUrl}}/products/1
@@ -101,27 +126,17 @@ GET {{baseUrl}}/products/1
 ### Obtener producto por slug
 GET {{baseUrl}}/products/martillo-de-carpintero-16oz
 
-### Obtener productos destacados
-GET {{baseUrl}}/products/featured?limit=4
-
-### Obtener productos más vendidos
-GET {{baseUrl}}/products/best-sellers?limit=5
-
 ### Obtener productos relacionados
 GET {{baseUrl}}/products/1/related?limit=4
 
-### ============================================
-### 🛍️ PRODUCTOS - ADMIN (requiere token)
-### ============================================
-
-### Crear producto
+### Crear producto (requiere admin token)
 POST {{baseUrl}}/products
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
   "name": "Sierra Circular 1400W",
-  "description": "Sierra circular profesional de 1400W con disco de 7.25 pulgadas. Ideal para cortes precisos en madera y materiales compuestos.",
+  "description": "Sierra circular profesional de 1400W",
   "short_description": "Sierra circular 1400W profesional",
   "price": 189.99,
   "compare_price": 229.99,
@@ -130,41 +145,23 @@ Content-Type: application/json
   "stock": 15,
   "min_stock": 3,
   "category": "Herramientas Eléctricas",
+  "category_id": 2,
   "brand": "Makita",
-  "unit": "unidad",
-  "weight": 3.5,
-  "tags": ["sierra", "circular", "makita", "1400w"],
-  "is_featured": true,
-  "features": {
-    "potencia": "1400W",
-    "disco": "7.25 pulgadas",
-    "profundidad_corte": "65mm",
-    "rpm": "5000"
-  }
+  "tags": ["sierra", "circular", "makita"],
+  "is_featured": true
 }
 
-### Actualizar producto
+### Actualizar producto (requiere admin token)
 PUT {{baseUrl}}/products/1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
   "price": 14.99,
-  "stock": 55,
-  "is_featured": true
+  "stock": 55
 }
 
-### Actualizar stock - Establecer valor exacto
-PATCH {{baseUrl}}/products/1/stock
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "stock": 100,
-  "operation": "set"
-}
-
-### Actualizar stock - Agregar unidades
+### Actualizar stock (requiere admin token)
 PATCH {{baseUrl}}/products/1/stock
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -174,22 +171,8 @@ Content-Type: application/json
   "operation": "add"
 }
 
-### Actualizar stock - Restar unidades
-PATCH {{baseUrl}}/products/1/stock
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "stock": 5,
-  "operation": "subtract"
-}
-
-### Obtener productos con bajo stock
+### Obtener productos con bajo stock (requiere admin token)
 GET {{baseUrl}}/products/admin/low-stock
-Authorization: Bearer {{token}}
-
-### Eliminar producto (soft delete)
-DELETE {{baseUrl}}/products/1
 Authorization: Bearer {{token}}
 
 ### ============================================
@@ -202,16 +185,10 @@ GET {{baseUrl}}/locations/provinces
 ### Obtener municipios de La Habana
 GET {{baseUrl}}/locations/municipalities/La Habana
 
-### Obtener municipios de Santiago de Cuba
-GET {{baseUrl}}/locations/municipalities/Santiago de Cuba
-
-### Obtener todas las divisiones (completo)
+### Obtener todas las divisiones
 GET {{baseUrl}}/locations/all
 
-### Obtener divisiones en formato simple
-GET {{baseUrl}}/locations/divisions-simple
-
-### Validar ubicación correcta
+### Validar ubicación
 POST {{baseUrl}}/locations/validate
 Content-Type: application/json
 
@@ -220,48 +197,5 @@ Content-Type: application/json
   "city": "Plaza de la Revolución"
 }
 
-### Validar ubicación incorrecta
-POST {{baseUrl}}/locations/validate
-Content-Type: application/json
-
-{
-  "province": "La Habana",
-  "city": "Holguín"
-}
-
-### Buscar municipios con "santa"
+### Buscar municipios
 GET {{baseUrl}}/locations/search?q=santa
-
-### Buscar municipios con "san"
-GET {{baseUrl}}/locations/search?q=san
-
-### ============================================
-### 🧪 PRUEBAS DE ERROR
-### ============================================
-
-### Registro con email duplicado (debería fallar)
-POST {{baseUrl}}/auth/register
-Content-Type: application/json
-
-{
-  "email": "juan@ejemplo.com",
-  "password": "password123",
-  "first_name": "Pedro",
-  "last_name": "González",
-  "phone": "1111111111"
-}
-
-### Login con contraseña incorrecta (debería fallar)
-POST {{baseUrl}}/auth/login
-Content-Type: application/json
-
-{
-  "email": "juan@ejemplo.com",
-  "password": "wrongpassword"
-}
-
-### Acceder sin token (debería fallar)
-GET {{baseUrl}}/auth/me
-
-### Ruta que no existe (404)
-GET {{baseUrl}}/ruta-inexistente

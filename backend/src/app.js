@@ -5,6 +5,8 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { errorHandler } = require('./middleware/errorHandler');
 
+require('./models');
+
 const app = express();
 
 // Middlewares básicos
@@ -39,11 +41,13 @@ app.get('/api/health', (req, res) => {
 // Importar y usar rutas
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
 const locationsRoutes = require('./routes/locationsRoutes');
 
 // Registrar rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/categories', categoryRoutes);
 app.use('/api/locations', locationsRoutes);
 
 // Ruta 404

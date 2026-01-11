@@ -131,6 +131,7 @@ async function seedDatabase() {
     console.log('✅ Dirección de ejemplo creada');
 
     // Crear productos de ejemplo
+    // ⚠️ NOTA: El slug se generará automáticamente en el hook beforeCreate
     const products = await Product.bulkCreate([
       {
         name: 'Martillo de Carpintero 16oz',
@@ -143,11 +144,13 @@ async function seedDatabase() {
         stock: 50,
         min_stock: 10,
         category: 'Herramientas Manuales',
+        category_id: categories[0].id,
         brand: 'Stanley',
         unit: 'unidad',
         weight: 0.5,
         tags: ['martillo', 'carpinteria', 'construccion'],
-        is_featured: true
+        is_featured: true,
+        slug: 'martillo-de-carpintero-16oz'
       },
       {
         name: 'Taladro Eléctrico 500W',
@@ -160,11 +163,13 @@ async function seedDatabase() {
         stock: 25,
         min_stock: 5,
         category: 'Herramientas Eléctricas',
+        category_id: categories[1].id,
         brand: 'Bosch',
         unit: 'unidad',
         weight: 1.8,
         tags: ['taladro', 'electrico', 'percutor'],
-        is_featured: true
+        is_featured: true,
+        slug: 'taladro-electrico-500w'
       },
       {
         name: 'Pintura Latex Interior Blanco 1 Galón',
@@ -176,10 +181,12 @@ async function seedDatabase() {
         stock: 100,
         min_stock: 20,
         category: 'Pinturas',
+        category_id: categories[2].id,
         brand: 'Comex',
         unit: 'galón',
         weight: 4.5,
-        tags: ['pintura', 'latex', 'interior', 'blanco']
+        tags: ['pintura', 'latex', 'interior', 'blanco'],
+        slug: 'pintura-latex-interior-blanco-1-galon'
       },
       {
         name: 'Llave Inglesa Ajustable 10"',
@@ -191,10 +198,12 @@ async function seedDatabase() {
         stock: 40,
         min_stock: 10,
         category: 'Herramientas Manuales',
+        category_id: categories[0].id,
         brand: 'Truper',
         unit: 'unidad',
         weight: 0.3,
-        tags: ['llave', 'ajustable', 'plomeria']
+        tags: ['llave', 'ajustable', 'plomeria'],
+        slug: 'llave-inglesa-ajustable-10'
       },
       {
         name: 'Destornillador Set 6 Piezas',
@@ -206,13 +215,29 @@ async function seedDatabase() {
         stock: 60,
         min_stock: 15,
         category: 'Herramientas Manuales',
+        category_id: categories[0].id,
         brand: 'Stanley',
         unit: 'set',
         weight: 0.6,
-        tags: ['destornillador', 'set', 'magnetico']
+        tags: ['destornillador', 'set', 'magnetico'],
+        slug: 'destornillador-set-6-piezas'
       }
     ]);
     console.log(`✅ ${products.length} productos creados`);
+
+    // Actualizar contador de productos en categorías
+    await Category.update(
+      { products_count: 3 },
+      { where: { id: categories[0].id } }
+    );
+    await Category.update(
+      { products_count: 1 },
+      { where: { id: categories[1].id } }
+    );
+    await Category.update(
+      { products_count: 1 },
+      { where: { id: categories[2].id } }
+    );
 
     // Crear algunas reseñas
     await Review.bulkCreate([
@@ -239,6 +264,7 @@ async function seedDatabase() {
 
   } catch (error) {
     console.error('❌ Error insertando datos de ejemplo:', error);
+    throw error;
   }
 }
 

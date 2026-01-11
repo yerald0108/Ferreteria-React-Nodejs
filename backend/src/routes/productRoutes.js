@@ -9,10 +9,13 @@ const {
   updateProduct,
   deleteProduct,
   updateStock,
+  updateProductImages,
   getLowStockProducts,
   getRelatedProducts,
   getBestSellers,
-  getFeaturedProducts
+  getFeaturedProducts,
+  getBrands,
+  getPriceRange
 } = require('../controllers/productController');
 const { protect, admin } = require('../middleware/auth');
 
@@ -50,6 +53,14 @@ router.get('/featured', getFeaturedProducts);
 // @desc    Obtener productos más vendidos
 router.get('/best-sellers', getBestSellers);
 
+// @route   GET /api/products/brands
+// @desc    Obtener todas las marcas disponibles
+router.get('/brands', getBrands);
+
+// @route   GET /api/products/price-range
+// @desc    Obtener rango de precios min/max
+router.get('/price-range', getPriceRange);
+
 // @route   GET /api/products
 // @desc    Listar todos los productos con filtros y paginación
 router.get('/', getProducts);
@@ -81,6 +92,10 @@ router.put('/:id', protect, admin, updateProduct);
 // @route   PATCH /api/products/:id/stock
 // @desc    Actualizar stock de un producto
 router.patch('/:id/stock', protect, admin, updateStock);
+
+// @route   PATCH /api/products/:id/images
+// @desc    Actualizar imágenes de un producto
+router.patch('/:id/images', protect, admin, updateProductImages);
 
 // @route   DELETE /api/products/:id
 // @desc    Eliminar un producto (soft delete)

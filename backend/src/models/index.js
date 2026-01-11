@@ -3,32 +3,26 @@
 
 const { sequelize } = require('../config/database');
 
-// Importar modelos
+// Importar modelos - IMPORTANTE: El orden importa para las relaciones
 const User = require('./User');
 const Address = require('./Address');
-const Product = require('./Product');
 const Category = require('./Category');
+const Product = require('./Product');
 const Review = require('./Review');
 const { Cart, CartItem } = require('./Cart');
 const { Order, OrderItem, OrderStatusHistory } = require('./Order');
 
-// Establecer relación Product-Category (muchos a uno)
-Product.belongsTo(Category, { 
-  foreignKey: 'category_id',
-  as: 'categoryInfo'
-});
-Category.hasMany(Product, { 
-  foreignKey: 'category_id',
-  as: 'products'
-});
+// ⚠️ NO DEFINIR RELACIONES AQUÍ
+// Las relaciones ya están definidas en cada modelo individual
+// Definirlas aquí causará conflictos y errores de "not associated"
 
 // Exportar todos los modelos y la instancia de sequelize
 module.exports = {
   sequelize,
   User,
   Address,
-  Product,
   Category,
+  Product,
   Review,
   Cart,
   CartItem,

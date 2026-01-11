@@ -15,10 +15,15 @@ const getProducts = async (req, res) => {
       limit = 12,
       search,
       category,
+      categories, // Múltiples categorías separadas por coma
+      brand,
+      brands, // Múltiples marcas separadas por coma
       minPrice,
       maxPrice,
+      minRating,
       inStock,
       featured,
+      tags, // Tags separados por coma
       sortBy = 'createdAt',
       order = 'DESC'
     } = req.query;
@@ -31,13 +36,33 @@ const getProducts = async (req, res) => {
       where[Op.or] = [
         { name: { [Op.iLike]: `%${search}%` } },
         { description: { [Op.iLike]: `%${search}%` } },
+        { short_description: { [Op.iLike]: `%${search}%` } },
+        { brand: { [Op.iLike]: `%${search}%` } },
+        { sku: { [Op.iLike]: `%${search}%` } },
         { tags: { [Op.contains]: [search.toLowerCase()] } }
       ];
     }
 
-    // Filtro por categoría
+    // Filtro por categoría única
     if (category) {
       where.category = category;
+    }
+
+    // Filtro por múltiples categorías
+    if (categories) {
+      const categoryArray = categories.split(',').map(c => c.trim());
+      where.category = { [Op.in]: categoryArray };
+    }
+
+    // Filtro por marca única
+    if (brand) {
+      where.brand = brand;
+    }
+
+    // Filtro por múltiples marcas
+    if (brands) {
+      const brandArray = brands.split(',').map(b => b.trim());
+      where.brand = { [Op.in]: brandArray };
     }
 
     // Filtro por rango de precio
@@ -45,6 +70,11 @@ const getProducts = async (req, res) => {
       where.price = {};
       if (minPrice) where.price[Op.gte] = parseFloat(minPrice);
       if (maxPrice) where.price[Op.lte] = parseFloat(maxPrice);
+    }
+
+    // Filtro por rating mínimo
+    if (minRating) {
+      where.rating_average = { [Op.gte]: parseFloat(minRating) };
     }
 
     // Filtro por stock
@@ -57,8 +87,14 @@ const getProducts = async (req, res) => {
       where.is_featured = true;
     }
 
+    // Filtro por tags
+    if (tags) {
+      const tagArray = tags.split(',').map(t => t.trim().toLowerCase());
+      where.tags = { [Op.overlap]: tagArray };
+    }
+
     // Ordenamiento válido
-    const validSortFields = ['price', 'createdAt', 'name', 'stock', 'sales_count', 'rating_average'];
+    const validSortFields = ['price', 'createdAt', 'name', 'stock', 'sales_count', 'rating_average', 'views'];
     const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
     const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
@@ -75,7 +111,8 @@ const getProducts = async (req, res) => {
         {
           model: Category,
           as: 'categoryInfo',
-          attributes: ['id', 'name', 'slug']
+          attributes: ['id', 'name', 'slug'],
+          required: false
         }
       ]
     });
@@ -91,6 +128,19 @@ const getProducts = async (req, res) => {
       totalPages,
       hasNext: parseInt(page) < totalPages,
       hasPrev: parseInt(page) > 1,
+      filters: {
+        search: search || null,
+        category: category || null,
+        categories: categories || null,
+        brand: brand || null,
+        brands: brands || null,
+        minPrice: minPrice || null,
+        maxPrice: maxPrice || null,
+        minRating: minRating || null,
+        inStock: inStock || null,
+        featured: featured || null,
+        tags: tags || null
+      },
       data: products
     });
   } catch (error) {
@@ -396,6 +446,70 @@ const updateStock = async (req, res) => {
   }
 };
 
+// @desc    Agregar/actualizar imágenes de un producto
+// @route   PATCH /api/products/:id/images
+// @access  Private/Admin
+const updateProductImages = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { images, thumbnail, operation = 'set' } = req.body;
+
+    const product = await Product.findByPk(id);
+
+    if (!product) {
+      return res.status(404).json({ 
+        error: 'Producto no encontrado' 
+      });
+    }
+
+    let newImages = product.images || [];
+
+    switch (operation) {
+      case 'add':
+        // Agregar nuevas imágenes
+        if (Array.isArray(images)) {
+          newImages = [...newImages, ...images];
+        }
+        break;
+      case 'remove':
+        // Remover imágenes específicas
+        if (Array.isArray(images)) {
+          newImages = newImages.filter(img => !images.includes(img));
+        }
+        break;
+      case 'set':
+      default:
+        // Reemplazar todas las imágenes
+        if (Array.isArray(images)) {
+          newImages = images;
+        }
+    }
+
+    const updates = { images: newImages };
+    
+    if (thumbnail) {
+      updates.thumbnail = thumbnail;
+    }
+
+    await product.update(updates);
+
+    res.json({
+      success: true,
+      message: 'Imágenes actualizadas exitosamente',
+      data: {
+        id: product.id,
+        images: newImages,
+        thumbnail: product.thumbnail
+      }
+    });
+  } catch (error) {
+    console.error('Error actualizando imágenes:', error);
+    res.status(500).json({ 
+      error: 'Error al actualizar imágenes' 
+    });
+  }
+};
+
 // @desc    Obtener productos con bajo stock
 // @route   GET /api/products/low-stock
 // @access  Private/Admin
@@ -441,16 +555,23 @@ const getRelatedProducts = async (req, res) => {
       });
     }
 
-    // Buscar productos de la misma categoría, excluyendo el actual
+    // Buscar productos relacionados:
+    // 1. De la misma categoría
+    // 2. Excluyendo el producto actual
+    // 3. Priorizando los más vendidos
     const relatedProducts = await Product.findAll({
       where: {
         is_active: true,
-        category: product.category,
+        [Op.or]: [
+          { category: product.category },
+          { brand: product.brand },
+          { tags: { [Op.overlap]: product.tags } }
+        ],
         id: { [Op.ne]: id }
       },
       limit: parseInt(limit),
       order: [['sales_count', 'DESC']],
-      attributes: ['id', 'name', 'slug', 'price', 'compare_price', 'thumbnail', 'rating_average']
+      attributes: ['id', 'name', 'slug', 'price', 'compare_price', 'thumbnail', 'rating_average', 'brand']
     });
 
     res.json({
@@ -471,13 +592,19 @@ const getRelatedProducts = async (req, res) => {
 // @access  Public
 const getBestSellers = async (req, res) => {
   try {
-    const { limit = 10 } = req.query;
+    const { limit = 10, category } = req.query;
+
+    const where = { 
+      is_active: true,
+      sales_count: { [Op.gt]: 0 }
+    };
+
+    if (category) {
+      where.category = category;
+    }
 
     const products = await Product.findAll({
-      where: { 
-        is_active: true,
-        sales_count: { [Op.gt]: 0 }
-      },
+      where,
       limit: parseInt(limit),
       order: [['sales_count', 'DESC']],
       attributes: ['id', 'name', 'slug', 'price', 'compare_price', 'thumbnail', 'rating_average', 'sales_count']
@@ -526,6 +653,72 @@ const getFeaturedProducts = async (req, res) => {
   }
 };
 
+// @desc    Obtener todas las marcas disponibles
+// @route   GET /api/products/brands
+// @access  Public
+const getBrands = async (req, res) => {
+  try {
+    const brands = await Product.findAll({
+      where: { 
+        is_active: true,
+        brand: { [Op.ne]: null }
+      },
+      attributes: [
+        'brand',
+        [require('sequelize').fn('COUNT', require('sequelize').col('id')), 'count']
+      ],
+      group: ['brand'],
+      order: [[require('sequelize').literal('count'), 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      count: brands.length,
+      data: brands
+    });
+  } catch (error) {
+    console.error('Error obteniendo marcas:', error);
+    res.status(500).json({ 
+      error: 'Error al obtener marcas' 
+    });
+  }
+};
+
+// @desc    Obtener rangos de precio
+// @route   GET /api/products/price-range
+// @access  Public
+const getPriceRange = async (req, res) => {
+  try {
+    const { category } = req.query;
+    
+    const where = { is_active: true };
+    if (category) {
+      where.category = category;
+    }
+
+    const result = await Product.findOne({
+      where,
+      attributes: [
+        [require('sequelize').fn('MIN', require('sequelize').col('price')), 'min'],
+        [require('sequelize').fn('MAX', require('sequelize').col('price')), 'max']
+      ]
+    });
+
+    res.json({
+      success: true,
+      data: {
+        min: parseFloat(result.dataValues.min) || 0,
+        max: parseFloat(result.dataValues.max) || 0
+      }
+    });
+  } catch (error) {
+    console.error('Error obteniendo rango de precios:', error);
+    res.status(500).json({ 
+      error: 'Error al obtener rango de precios' 
+    });
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
@@ -533,8 +726,11 @@ module.exports = {
   updateProduct,
   deleteProduct,
   updateStock,
+  updateProductImages,
   getLowStockProducts,
   getRelatedProducts,
   getBestSellers,
-  getFeaturedProducts
+  getFeaturedProducts,
+  getBrands,
+  getPriceRange
 };
