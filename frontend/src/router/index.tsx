@@ -16,6 +16,7 @@ const Home = lazy(() => import('../pages/Home'));
 const Login = lazy(() => import('../pages/auth/Login'));
 const Register = lazy(() => import('../pages/auth/Register'));
 const ForgotPassword = lazy(() => import('../pages/auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('../pages/auth/ResetPassword'));
 
 // Product pages
 const ProductsList = lazy(() => import('../pages/products/ProductsList'));
@@ -86,6 +87,14 @@ export const router = createBrowserRouter([
         element: (
           <LazyLoad>
             <ForgotPassword />
+          </LazyLoad>
+        ),
+      },
+      {
+        path: ROUTES.RESET_PASSWORD,
+        element: (
+          <LazyLoad>
+            <ResetPassword />
           </LazyLoad>
         ),
       },
