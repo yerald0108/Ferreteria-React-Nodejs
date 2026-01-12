@@ -1,6 +1,7 @@
 // src/api/index.ts
 
-import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import axios from 'axios';
+import type { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import type { ApiError } from '../types/api.types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -50,7 +51,7 @@ apiClient.interceptors.response.use(
     // Construir mensaje de error
     const apiError: ApiError = {
       message: error.response?.data?.message || 
-               error.response?.data?.error || 
+               error.response?.data?.error ||  
                error.message || 
                'Error desconocido',
       status: error.response?.status,
