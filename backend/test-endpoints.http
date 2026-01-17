@@ -1,6 +1,6 @@
 ### Variables
 @baseUrl = http://localhost:5000/api
-@token = TU_TOKEN_AQUI
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzY4Njg2NzIyLCJleHAiOjE3NjkyOTE1MjJ9.H7-uWYgiEyOzBw0tI84uIMKOT3aifhWfPPI4hywHPt4
 
 ### ============================================
 ### 🏥 HEALTH CHECK
