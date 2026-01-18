@@ -162,6 +162,10 @@ const Product = sequelize.define('Product', {
     validate: {
       min: 0,
       max: 5
+    },
+    get() {
+      const value = this.getDataValue('rating_average');
+      return parseFloat(value) || 0;
     }
   },
   rating_count: {
