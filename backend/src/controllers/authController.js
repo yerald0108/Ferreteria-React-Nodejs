@@ -3,6 +3,10 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
+const { 
+  sendVerificationEmail, 
+  sendPasswordResetEmail 
+} = require('../services/emailService');
 
 // Generar JWT Token
 const generateToken = (id) => {
@@ -39,7 +43,7 @@ const register = async (req, res) => {
     // Crear usuario
     const user = await User.create({
       email,
-      password_hash: password, // El hook beforeCreate lo hasheará
+      password_hash: password,
       first_name,
       last_name,
       phone,
@@ -47,8 +51,18 @@ const register = async (req, res) => {
       verification_expires
     });
 
-    // TODO: Enviar email de verificación
-    // await sendVerificationEmail(user.email, verification_token);
+    // Enviar email de verificación
+    try {
+      await sendVerificationEmail(
+        user.email, 
+        verification_token, 
+        `${user.first_name} ${user.last_name}`
+      );
+      console.log('✅ Email de verificación enviado a:', user.email);
+    } catch (emailError) {
+      console.error('❌ Error enviando email de verificación:', emailError);
+      // No fallar el registro si el email falla
+    }
 
     // Generar token JWT
     const token = generateToken(user.id);
@@ -194,8 +208,17 @@ const forgotPassword = async (req, res) => {
     user.reset_expires = reset_expires;
     await user.save();
 
-    // TODO: Enviar email con link de reset
-    // await sendPasswordResetEmail(user.email, reset_token);
+    // Enviar email con link de reset
+    try {
+      await sendPasswordResetEmail(
+        user.email, 
+        reset_token, 
+        `${user.first_name} ${user.last_name}`
+      );
+      console.log('✅ Email de recuperación enviado a:', user.email);
+    } catch (emailError) {
+      console.error('❌ Error enviando email de recuperación:', emailError);
+    }
 
     res.json({
       success: true,
@@ -242,7 +265,7 @@ const resetPassword = async (req, res) => {
     }
 
     // Actualizar contraseña
-    user.password_hash = password; // El hook beforeUpdate lo hasheará
+    user.password_hash = password;
     user.reset_token = null;
     user.reset_expires = null;
     await user.save();
@@ -315,7 +338,47 @@ const updateProfile = async (req, res) => {
   }
 };
 
-// Middleware de protección (para usar en rutas)
+// @desc    Reenviar email de verificación
+// @route   POST /api/auth/resend-verification
+// @access  Private
+const resendVerification = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+
+    if (user.email_verified) {
+      return res.status(400).json({
+        error: 'Tu email ya está verificado'
+      });
+    }
+
+    // Generar nuevo token
+    const verification_token = crypto.randomBytes(32).toString('hex');
+    const verification_expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    user.verification_token = verification_token;
+    user.verification_expires = verification_expires;
+    await user.save();
+
+    // Enviar email
+    await sendVerificationEmail(
+      user.email,
+      verification_token,
+      `${user.first_name} ${user.last_name}`
+    );
+
+    res.json({
+      success: true,
+      message: 'Email de verificación enviado'
+    });
+  } catch (error) {
+    console.error('Error reenviando verificación:', error);
+    res.status(500).json({
+      error: 'Error al reenviar email de verificación'
+    });
+  }
+};
+
+// Middleware de protección
 const protect = async (req, res, next) => {
   let token;
   
@@ -350,5 +413,6 @@ module.exports = {
   resetPassword,
   getMe,
   updateProfile,
+  resendVerification,
   protect
 };
