@@ -19,19 +19,19 @@ const categoryValidation = [
 
 // @route   GET /api/categories/tree
 // @desc    Obtener árbol jerárquico de categorías
-router.get('/tree', getCategoryTree);
+router.get('/tree', categoryController.getCategoryTree);
 
 // @route   GET /api/categories
 // @desc    Listar todas las categorías
-router.get('/', getCategories);
+router.get('/', categoryController.getCategories);
 
 // @route   GET /api/categories/:id
 // @desc    Obtener una categoría por ID o slug
-router.get('/:id', getCategoryById);
+router.get('/:id', categoryController.getCategoryById);
 
 // @route   GET /api/categories/:id/products
 // @desc    Obtener productos de una categoría
-router.get('/:id/products', getCategoryProducts);
+router.get('/:id/products', categoryController.getCategoryProducts);
 
 // ============================================
 // RUTAS PROTEGIDAS (ADMIN)
@@ -39,18 +39,18 @@ router.get('/:id/products', getCategoryProducts);
 
 // @route   GET /api/categories/admin/stats
 // @desc    Obtener estadísticas de categorías
-router.get('/admin/stats', protect, admin, getCategoryStats);
+router.get('/admin/stats', protect, admin, categoryController.getCategoryStats);
 
 // @route   POST /api/categories
 // @desc    Crear una nueva categoría
-router.post('/', protect, admin, categoryValidation, createCategory);
+router.post('/', protect, admin, categoryValidation, categoryController.createCategory);
 
 // @route   PUT /api/categories/:id
 // @desc    Actualizar una categoría
-router.put('/:id', protect, admin, updateCategory);
+router.put('/:id', protect, admin, categoryController.updateCategory);
 
 // @route   DELETE /api/categories/:id
 // @desc    Eliminar una categoría (soft delete)
-router.delete('/:id', protect, admin, deleteCategory);
+router.delete('/:id', protect, admin, categoryController.deleteCategory);
 
 module.exports = router;

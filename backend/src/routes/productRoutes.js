@@ -16,7 +16,7 @@ const {
   getFeaturedProducts,
   getBrands,
   getPriceRange
-} = require('../controllers/productController');
+} = require('../controllers/products/productController');
 const { protect, admin } = require('../middleware/auth');
 
 // Validaciones para crear/actualizar producto

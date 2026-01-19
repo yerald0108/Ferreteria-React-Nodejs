@@ -146,12 +146,12 @@ const ProductCard = ({ product, layout = 'grid' }: ProductCardProps) => {
               </span>
             </div>
   
-  {product.sales_count > 0 && (
-    <span className="text-gray-500">
-      {product.sales_count} vendidos
-    </span>
-  )}
-</div>
+              {product.sales_count > 0 && (
+                <span className="text-gray-500">
+                  {product.sales_count} vendidos
+                </span>
+              )}
+            </div>
 
             {/* Stock */}
             {isLowStock && !isOutOfStock && (
