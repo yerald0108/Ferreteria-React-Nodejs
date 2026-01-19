@@ -2,16 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const {
-  getCategories,
-  getCategoryById,
-  getCategoryProducts,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-  getCategoryTree,
-  getCategoryStats
-} = require('../controllers/categoryController');
+const categoryController = require('../controllers/categories');
 const { protect, admin } = require('../middleware/auth');
 
 // Validaciones
