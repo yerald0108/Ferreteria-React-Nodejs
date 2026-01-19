@@ -19,6 +19,9 @@ const ProductGrid = ({
 }: ProductGridProps) => {
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
 
+  // Validar que products sea un array
+  const validProducts = Array.isArray(products) ? products : [];
+
   if (isLoading) {
     return (
       <div>
@@ -38,7 +41,7 @@ const ProductGrid = ({
     );
   }
 
-  if (!products || products.length === 0) {
+  if (!validProducts || validProducts.length === 0) {
     return (
       <div className="text-center py-20">
         <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
@@ -71,7 +74,7 @@ const ProductGrid = ({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         {/* Contador */}
         <p className="text-sm text-gray-600">
-          Mostrando <span className="font-semibold text-gray-900">{products.length}</span> productos
+          Mostrando <span className="font-semibold text-gray-900">{validProducts.length}</span> productos
         </p>
 
         {/* Toggle de vista */}
@@ -118,7 +121,7 @@ const ProductGrid = ({
           ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
           : 'flex flex-col gap-4'
       }>
-        {products.map((product) => (
+        {validProducts.map((product) => (
           <ProductCard 
             key={product.id} 
             product={product}
@@ -128,7 +131,7 @@ const ProductGrid = ({
       </div>
 
       {/* Indicador de más resultados */}
-      {products.length >= 12 && (
+      {validProducts.length >= 12 && (
         <div className="mt-8 text-center">
           <div className="inline-flex items-center gap-2 text-sm text-gray-500">
             <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">

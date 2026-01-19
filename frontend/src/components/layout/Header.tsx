@@ -4,7 +4,10 @@ import { Link } from 'react-router-dom';
 import { ROUTES } from '../../utils/constants';
 import { useAuth } from '../../hooks/useAuth';
 import { useCart } from '../../hooks/useCart';
-import { useState } from 'react';
+import { useState, Suspense, lazy } from 'react';
+
+// Lazy load SearchSidebar para mejor performance
+const SearchSidebar = lazy(() => import('../../components/common/SearchSidebar'));
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -162,22 +165,17 @@ const Header = () => {
         </div>
       </header>
 
-      {/* Search Sidebar - Dynamic Import */}
+      {/* Search Sidebar - Lazy loaded con Suspense */}
       {showSearch && (
-        <SearchSidebarWrapper 
-          isOpen={showSearch} 
-          onClose={() => setShowSearch(false)} 
-        />
+        <Suspense fallback={null}>
+          <SearchSidebar 
+            isOpen={showSearch} 
+            onClose={() => setShowSearch(false)} 
+          />
+        </Suspense>
       )}
     </>
   );
-};
-
-// Lazy wrapper para el SearchSidebar
-const SearchSidebarWrapper = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  // Importar dinámicamente para mejor performance
-  const SearchSidebar = require('../../components/common/SearchSidebar').default;
-  return <SearchSidebar isOpen={isOpen} onClose={onClose} />;
 };
 
 export default Header;

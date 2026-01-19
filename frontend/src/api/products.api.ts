@@ -82,6 +82,20 @@ export const productsApi = {
    * Buscar productos
    */
   search: async (query: string, params?: SearchParams): Promise<PaginatedResponse<Product>> => {
-    return productsApi.getProducts({ ...params, search: query });
+    const searchParams = { ...params, search: query };
+    const response = await productsApi.getProducts(searchParams);
+    
+    // Asegurar que data sea un array
+    if (!Array.isArray(response.data)) {
+      console.warn('API response.data is not an array:', response);
+      return {
+        ...response,
+        data: [],
+        count: 0,
+        total: 0,
+      };
+    }
+    
+    return response;
   },
 };

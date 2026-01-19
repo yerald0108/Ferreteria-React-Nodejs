@@ -49,7 +49,10 @@ const SearchSidebar = ({ isOpen, onClose }: SearchSidebarProps) => {
       setIsLoading(true);
       try {
         const response = await productsApi.search(debouncedQuery, { limit: 8 });
-        setResults(response.data || []);
+        
+        // Validar que response.data sea un array
+        const products = Array.isArray(response.data) ? response.data : [];
+        setResults(products);
       } catch (error) {
         console.error('Error searching:', error);
         setResults([]);
