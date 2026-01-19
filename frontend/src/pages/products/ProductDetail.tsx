@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { productsApi } from '../../api/products.api';
 import { useCart } from '../../hooks/useCart';
+import { useAuth } from '../../hooks/useAuth';
 import { formatPrice } from '../../utils/formatters';
 import { ROUTES } from '../../utils/constants';
 import { Breadcrumbs, LoadingSpinner, Button } from '../../components/common';
@@ -14,6 +15,7 @@ const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { addToCart, isInCart, openCart } = useCart();
+  const { isAuthenticated } = useAuth();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -23,6 +25,7 @@ const ProductDetail = () => {
   const [selectedTab, setSelectedTab] = useState<'description' | 'specs' | 'reviews'>('description');
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
+  // Cargar producto
   useEffect(() => {
     const fetchProduct = async () => {
       if (!slug) return;
@@ -31,13 +34,10 @@ const ProductDetail = () => {
       setError(null);
 
       try {
-        const [productData] = await Promise.all([
-          productsApi.getProductById(slug),
-          productsApi.getRelated(0, 4).catch(() => []),
-        ]);
-
+        const productData = await productsApi.getProductById(slug);
         setProduct(productData);
-
+        
+        // Cargar productos relacionados con el ID real
         if (productData.id) {
           const related = await productsApi.getRelated(productData.id, 4);
           setRelatedProducts(related);
@@ -52,25 +52,32 @@ const ProductDetail = () => {
     fetchProduct();
   }, [slug]);
 
+  // Scroll to top al cambiar de producto
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [slug]);
 
+  /**
+   * Agregar al carrito
+   */
   const handleAddToCart = () => {
     if (!product) return;
 
     setIsAddingToCart(true);
-
+    
     setTimeout(() => {
       const success = addToCart(product, quantity);
       setIsAddingToCart(false);
-
+      
       if (success) {
         openCart();
       }
     }, 300);
   };
 
+  /**
+   * Comprar ahora (agregar y redirigir al checkout)
+   */
   const handleBuyNow = () => {
     if (!product) return;
 
@@ -80,10 +87,12 @@ const ProductDetail = () => {
     }
   };
 
+  // Loading state
   if (isLoading) {
     return <LoadingSpinner fullScreen />;
   }
 
+  // Error state
   if (error || !product) {
     return (
       <div className="container mx-auto px-4 py-16">
@@ -113,6 +122,7 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-6">
+        {/* Breadcrumbs */}
         <Breadcrumbs
           items={[
             { label: 'Productos', path: ROUTES.PRODUCTS },
@@ -122,7 +132,9 @@ const ProductDetail = () => {
           className="mb-6"
         />
 
+        {/* Contenido principal */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          {/* Galería de imágenes */}
           <div className="bg-white rounded-lg p-6 sticky top-4 self-start">
             <ProductImageGallery
               images={product.images}
@@ -130,6 +142,7 @@ const ProductDetail = () => {
               thumbnail={product.thumbnail}
             />
 
+            {/* Trust badges */}
             <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200">
               <div className="text-center">
                 <svg className="w-8 h-8 text-green-600 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
@@ -153,17 +166,21 @@ const ProductDetail = () => {
             </div>
           </div>
 
+          {/* Información del producto */}
           <div className="bg-white rounded-lg p-6">
+            {/* Marca */}
             {product.brand && (
               <p className="text-sm font-semibold text-orange-600 uppercase tracking-wide mb-2">
                 {product.brand}
               </p>
             )}
 
+            {/* Título */}
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
               {product.name}
             </h1>
 
+            {/* Rating y ventas */}
             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200">
               <div className="flex items-center gap-2">
                 <div className="flex">
@@ -199,6 +216,7 @@ const ProductDetail = () => {
               )}
             </div>
 
+            {/* Precio */}
             <div className="mb-6">
               <div className="flex items-baseline gap-3 mb-2">
                 <span className="text-4xl font-bold text-gray-900">
@@ -223,12 +241,14 @@ const ProductDetail = () => {
               )}
             </div>
 
+            {/* Short description */}
             {product.short_description && (
               <p className="text-gray-700 mb-6 leading-relaxed">
                 {product.short_description}
               </p>
             )}
 
+            {/* Stock status */}
             <div className="mb-6">
               {isOutOfStock ? (
                 <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-3 rounded-lg">
@@ -254,6 +274,7 @@ const ProductDetail = () => {
               )}
             </div>
 
+            {/* Selector de cantidad */}
             {!isOutOfStock && (
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -303,6 +324,7 @@ const ProductDetail = () => {
               </div>
             )}
 
+            {/* Botones de acción */}
             <div className="space-y-3 mb-6">
               <Button
                 onClick={handleAddToCart}
@@ -343,6 +365,7 @@ const ProductDetail = () => {
               )}
             </div>
 
+            {/* Info adicional */}
             <div className="space-y-3 text-sm">
               <div className="flex items-start gap-3">
                 <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -372,7 +395,9 @@ const ProductDetail = () => {
           </div>
         </div>
 
+        {/* Tabs de información */}
         <div className="bg-white rounded-lg mb-12">
+          {/* Tab headers */}
           <div className="border-b border-gray-200">
             <div className="flex gap-8 px-6">
               <button
@@ -408,6 +433,7 @@ const ProductDetail = () => {
             </div>
           </div>
 
+          {/* Tab content */}
           <div className="p-6">
             {selectedTab === 'description' && (
               <div className="prose max-w-none">
@@ -445,6 +471,7 @@ const ProductDetail = () => {
           </div>
         </div>
 
+        {/* Productos relacionados */}
         {relatedProducts.length > 0 && (
           <div className="mb-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
